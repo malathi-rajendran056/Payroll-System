@@ -1,0 +1,193 @@
+import java.util.*;
+
+public class Main {
+    static Scanner sc = new Scanner(System.in);
+    static List<Employee> employees = new ArrayList<>();
+
+    public static void main(String[] args) {
+        preloadEmployees(); 
+
+        System.out.println("=== Welcome to Payroll Management System ===");
+
+        while (true) {
+            System.out.println("\nLogin as:");
+            System.out.println("1. Admin");
+            System.out.println("2. Employee");
+            System.out.println("3. Exit");
+            System.out.print("Enter choice: ");
+            int choice = sc.nextInt();
+            sc.nextLine();
+
+            switch (choice) {
+                case 1: adminLogin(); break;
+                case 2: employeeLogin(); break;
+                case 3: System.out.println("Exiting... Byeee!"); return;
+                default: System.out.println("Invalid option.");
+            }
+        }
+    }
+
+    
+    public static void preloadEmployees() {
+        try {
+            employees.add(new Employee("Malathi", "EMP001", "Software Tester", 35000));
+            employees.add(new Employee("Arun", "EMP002", "Developer", 45000));
+            employees.add(new Employee("Priya", "EMP003", "HR Executive", 30000));
+        } catch (InvalidIdException e) {
+            System.out.println("Error loading default employees: " + e.getMessage());
+        }
+    }
+
+    
+    public static void adminLogin() {
+        System.out.print("Enter Admin Password: ");
+        String password = sc.nextLine();
+
+        if (password.equals("admin123")) {
+            adminMenu();
+        } else {
+            System.out.println("Incorrect password.");
+        }
+    }
+
+    public static void adminMenu() {
+        while (true) {
+            System.out.println("\n--- Admin Menu ---");
+            System.out.println("1. Add Employee");
+            System.out.println("2. View All Employee Salary Slips");
+            System.out.println("3. Logout");
+            System.out.print("Choice: ");
+            int choice = sc.nextInt();
+            sc.nextLine();
+
+            switch (choice) {
+                case 1: addEmployee(); break;
+                case 2: viewAllEmployees(); break;
+                case 3: return;
+                default: System.out.println("Invalid choice.");
+            }
+        }
+    }
+
+    public static void addEmployee() {
+        try {
+            System.out.print("Enter Name: ");
+            String name = sc.nextLine();
+            System.out.print("Enter ID (EMP123): ");
+            String id = sc.nextLine();
+            System.out.print("Enter Designation: ");
+            String designation = sc.nextLine();
+            System.out.print("Enter Basic Salary: ");
+            double salary = sc.nextDouble();
+            sc.nextLine();
+
+            Employee emp = new Employee(name, id, designation, salary);
+            employees.add(emp);
+            System.out.println("Employee added.");
+
+        } catch (InvalidIdException e) {
+            System.out.println(" " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            sc.nextLine();
+        }
+    }
+
+    public static void viewAllEmployees() {
+        if (employees.isEmpty()) {
+            System.out.println("No employees to show.");
+        } else {
+            for (Employee emp : employees) {
+                printSalarySlip(emp);
+            }
+        }
+    }
+
+    
+    public static void employeeLogin() {
+        if (employees.isEmpty()) {
+            System.out.println("No employee records available.");
+            return;
+        }
+
+        System.out.print("Enter your Employee ID: ");
+        String inputId = sc.nextLine();
+
+        for (Employee emp : employees) {
+            if (emp.getId().equalsIgnoreCase(inputId)) {
+                System.out.println("Login successful.");
+                printSalarySlip(emp);
+                return;
+            }
+        }
+
+        System.out.println("  Invalid ID. Try again.");
+    }
+
+    
+    public static void printSalarySlip(Employee emp) {
+        double bonus = PayrollCalculator.calculateBonus(emp.getBasicSalary());
+        double tax = PayrollCalculator.calculateTax(emp.getBasicSalary());
+        double deductions = PayrollCalculator.calculateDeductions(emp.getBasicSalary());
+        double netSalary = PayrollCalculator.calculateNetSalary(emp.getBasicSalary());
+
+        System.out.println("\n--- Salary Slip ---");
+        System.out.println("Name        : " + emp.getName());
+        System.out.println("ID          : " + emp.getId());
+        System.out.println("Designation : " + emp.getDesignation());
+        System.out.println("Basic Salary: ₹" + emp.getBasicSalary());
+        System.out.println("Bonus       : ₹" + bonus);
+        System.out.println("Tax         : ₹" + tax);
+        System.out.println("Deductions  : ₹" + deductions);
+        System.out.println("Net Salary  : ₹" + netSalary);
+        System.out.println("---------------------");
+    }
+}
+
+
+
+class InvalidIdException extends Exception {
+    public InvalidIdException(String message) {
+        super(message);
+    }
+}
+
+class Employee {
+    private String name;
+    private String id;
+    private String designation;
+    private double basicSalary;
+
+    public Employee(String name, String id, String designation, double basicSalary) throws InvalidIdException {
+        if (!id.matches("EMP\\d{3}")) {
+            throw new InvalidIdException("ID must be in the format EMP123.");
+        }
+        this.name = name;
+        this.id = id;
+        this.designation = designation;
+        this.basicSalary = basicSalary;
+    }
+
+    public String getName() { return name; }
+    public String getId() { return id; }
+    public String getDesignation() { return designation; }
+    public double getBasicSalary() { return basicSalary; }
+}
+
+class PayrollCalculator {
+    public static double calculateBonus(double salary) {
+        return salary * 0.10;
+    }
+
+    public static double calculateTax(double salary) {
+        return salary * 0.12;
+    }
+
+    public static double calculateDeductions(double salary) {
+        return salary * 0.05;
+    }
+
+    public static double calculateNetSalary(double salary) {
+        return salary + calculateBonus(salary) - calculateTax(salary) - calculateDeductions(salary);
+    }
+}
